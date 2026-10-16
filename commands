@@ -1,0 +1,22 @@
+ollama/ollama
+
+
+Primeiro 
+docker run -d \
+  --name ollama \
+  -p 11434:11434 \
+  -v ollama:/root/.ollama \
+  --restart unless-stopped \
+  ollama/ollama
+
+Fazer o pull do model
+curl http://localhost:11434/api/pull -d '{"model": "qwen3:0.6b"}'
+
+Interar com rest api
+
+curl http://localhost:11434/api/chat -d '{
+  "model": "qwen3:0.6b",
+  "messages": [{"role": "user", "content": "Olá, tudo bem?"}],
+  "stream": false,
+  "think": false
+}'
