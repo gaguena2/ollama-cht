@@ -4,10 +4,10 @@ Backend que integra o [Ollama](https://github.com/ollama/ollama) (LLM local, via
 
 ## Arquitetura
 
-O backend (`ollama_cht/`) segue **DDD (Domain-Driven Design)**, separado em camadas:
+O backend (`ollama_cht_api/`) segue **DDD (Domain-Driven Design)**, separado em camadas:
 
 ```
-ollama_cht/
+ollama_cht_api/
 ├── domain/           # regras de negócio puras, sem dependência de framework
 │   ├── entities.py       # Conversation, Message
 │   └── repositories.py   # ConversationRepository (interface)
@@ -44,7 +44,10 @@ A ideia da separação: `domain` e `application` não sabem que existe Postgres,
 
 ## Como rodar
 
+O volume `ollama` (onde o modelo fica salvo) é `external` no compose — numa VPS nova, crie-o antes de subir pela primeira vez:
+
 ```bash
+docker volume create ollama
 cp .env.example .env   # ajuste as credenciais do Postgres se quiser
 docker compose up -d --build
 ```
@@ -57,7 +60,7 @@ Isso sobe três containers:
 | `db`     | Postgres (histórico das conversas)        | não (só rede interna) |
 | `app`    | este backend (FastAPI)                    | sim, porta `8000` |
 
-Depois de subir, baixe o modelo pelo menos uma vez (fica persistido no volume `ollama_data`, não precisa repetir em todo restart):
+Depois de subir, baixe o modelo pelo menos uma vez (fica persistido no volume `ollama`, não precisa repetir em todo restart):
 
 ```bash
 docker exec -it ollama ollama pull qwen3:0.6b
@@ -71,7 +74,55 @@ curl -X POST localhost:8000/webhook/whatsapp \
   -d '{"from": "5511999999999", "message": "Olá, tudo bem?"}'
 ```
 
-Comandos de teste direto no Ollama (sem passar pelo backend) estão em [`commands`](./commands).
+## Testando o Ollama direto via REST API
+
+Mini tutorial pra interagir com o Ollama sem passar pelo backend — útil pra debug ou pra subir o Ollama isolado, fora do `docker compose` deste projeto.
+
+**1. Subir o container do Ollama**
+
+```bash
+docker run -d \
+  --name ollama \
+  -p 11434:11434 \
+  -v ollama:/root/.ollama \
+  --restart unless-stopped \
+  ollama/ollama
+```
+
+**2. Baixar um modelo**
+
+```bash
+curl http://localhost:11434/api/pull -d '{"model": "qwen3:0.6b"}'
+```
+
+**3. Listar os modelos instalados**
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+**4. Ver quais modelos estão carregados na memória**
+
+```bash
+curl http://localhost:11434/api/ps
+```
+
+**5. Remover um modelo**
+
+```bash
+curl -X DELETE http://localhost:11434/api/delete -d '{"model": "qwen3:0.6b"}'
+```
+
+**6. Conversar via REST API**
+
+```bash
+curl http://localhost:11434/api/chat -d '{
+  "model": "qwen3:0.6b",
+  "messages": [{"role": "user", "content": "Olá, tudo bem?"}],
+  "stream": false,
+  "think": false
+}'
+```
 
 ## Variáveis de ambiente (`.env`)
 

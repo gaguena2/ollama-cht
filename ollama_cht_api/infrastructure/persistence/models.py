@@ -16,6 +16,7 @@ class ConversationModel(Base):
         back_populates="conversation",
         cascade="all, delete-orphan",
         order_by="MessageModel.created_at",
+        lazy="selectin",
     )
 
 

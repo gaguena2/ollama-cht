@@ -4,7 +4,7 @@ services:
     container_name: ollama
     restart: unless-stopped
     volumes:
-      - ollama_data:/root/.ollama
+      - ollama:/root/.ollama
     networks:
       - ollama-cht
 
@@ -43,7 +43,8 @@ services:
       - ollama-cht
 
 volumes:
-  ollama_data:
+  ollama:
+    external: true
   postgres_data:
 
 networks:

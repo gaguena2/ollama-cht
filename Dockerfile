@@ -5,8 +5,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ollama_cht ./ollama_cht
+COPY ollama_cht_api ./ollama_cht_api
 
 EXPOSE 8000
 
-CMD ["uvicorn", "ollama_cht.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "ollama_cht_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
